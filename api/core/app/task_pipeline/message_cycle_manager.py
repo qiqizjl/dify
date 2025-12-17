@@ -2,7 +2,7 @@ import hashlib
 import logging
 import time
 from threading import Thread
-from typing import Union
+from typing import Literal, Union
 
 from flask import Flask, current_app
 from sqlalchemy import select
@@ -30,6 +30,7 @@ from core.app.entities.task_entities import (
     StreamEvent,
     WorkflowTaskState,
 )
+from core.helper.message_file_cache import MessageFileCache
 from core.llm_generator.llm_generator import LLMGenerator
 from core.tools.signature import sign_tool_file
 from extensions.ext_database import db
@@ -222,9 +223,9 @@ class MessageCycleManager:
         :param message_id: message id
         :return:
         """
-        with Session(db.engine, expire_on_commit=False) as session:
-            message_file = session.scalar(select(MessageFile).where(MessageFile.id == message_id))
-        event_type = StreamEvent.MESSAGE_FILE if message_file else StreamEvent.MESSAGE
+        event_type: Literal[StreamEvent.MESSAGE_FILE, StreamEvent.MESSAGE] = StreamEvent.MESSAGE
+        if MessageFileCache.get(message_id):
+            event_type = StreamEvent.MESSAGE_FILE
 
         return MessageStreamResponse(
             task_id=self._application_generate_entity.task_id,

@@ -25,6 +25,7 @@ from core.app.entities.task_entities import (
     CompletionAppStreamResponse,
 )
 from core.app.task_pipeline.easy_ui_based_generate_task_pipeline import EasyUIBasedGenerateTaskPipeline
+from core.helper.message_file_cache import MessageFileCache
 from core.prompt.utils.prompt_template_parser import PromptTemplateParser
 from extensions.ext_database import db
 from libs.datetime_utils import naive_utc_now
@@ -232,6 +233,9 @@ class MessageBasedAppGenerator(BaseAppGenerator):
                 db.session.add_all(message_files)
 
             db.session.commit()
+
+            if len(message_files) > 0:
+                MessageFileCache.set(message.id)
             return conversation, message
         except Exception:
             db.session.rollback()

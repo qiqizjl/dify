@@ -13,6 +13,7 @@ from core.callback_handler.agent_tool_callback_handler import DifyAgentCallbackH
 from core.callback_handler.workflow_tool_callback_handler import DifyWorkflowCallbackHandler
 from core.file import FileType
 from core.file.models import FileTransferMethod
+from core.helper.message_file_cache import MessageFileCache
 from core.ops.ops_trace_manager import TraceQueueManager
 from core.tools.__base.tool import Tool
 from core.tools.entities.tool_entities import (
@@ -359,6 +360,8 @@ class ToolEngine:
             db.session.refresh(message_file)
 
             result.append(message_file.id)
+        if len(result) > 0:
+            MessageFileCache.set(agent_message.id)
 
         db.session.close()
 
